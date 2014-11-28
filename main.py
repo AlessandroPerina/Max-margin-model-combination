@@ -1,12 +1,13 @@
 #main
 import os
-from data_reader import *
+import data_reader as DR
 
-D = data_reader("nursery")
+name = 'nursery'
+os.chdir('C:\Users\APerina\Desktop\Git\max-margin-model-combination')
+features, names =  DR.data_reader( name )
 
-print D.name
-print D.data[0]
-print D.no_Z
-print D.values_Z[1]
+name = 'glass'
+features2, names2 =  DR.data_reader( name )
+
 print "Ho finito"
 

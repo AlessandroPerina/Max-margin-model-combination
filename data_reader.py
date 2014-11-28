@@ -3,44 +3,38 @@ import os
 import numpy as np
 from collections import Counter
 
-class data_reader:
+def data_reader( name ):
+    base_directory = os.path.abspath(".")
+    data = list()
+    os.chdir( ".\Datasets\\" + name )
+    with open( name + ".data", "rb" ) as f:
+        tmp = reader(f)
+        for idx,val in enumerate(tmp):
+            data.append(val)
+    # Cancella le ultime linee vuote (se esistono)
+    while (len(data[-1]) == 0):
+        del data[-1]
+    
+    T = len( data )
+    Z = len( data[0] )
 
-	def __init__(self, name):
+    names_Z = list()
+    features = np.zeros([T,Z])
+    for z in range( Z ):
+        listvalues = [row[z] for row in data]
+        if len( set( listvalues ) ) > 10:
+            names_Z.append('numeric')
+            features[:,z] = [float(w) for w in listvalues]
+        else:
+            names_Z.append( list(set(listvalues)))
+            features[:,z] = [list(set(listvalues)).index( w ) for w in listvalues]
 
-		base_directory = os.path.abspath(".")
-		self.name = name
-		self.data = list()
-		os.chdir( ".\Datasets\\" + name )
-		with open( name + ".data", "rb" ) as f:
-			tmp = reader(f)
-			for idx,val in enumerate(tmp):
-				self.data.append(val)
+    os.chdir(base_directory)
+    return features, names_Z
 
-		os.chdir( base_directory )
-		while (len(self.data[-1]) == 0):
-			del self.data[-1]
 
-		self.T = len( self.data )
-		self.Z = len( self.data[0] )
-		self.no_Z = [0 for i in range(0,self.Z )]
-		self.values_Z = dict()
-		self.values_Z_D = dict()
-		self.theta = list()
-		self.thetaD = list(list())
-		for z in range(0,self.Z ):
-			listvalues = [row[z] for row in self.data]
-			for z2 in range(0,self.Z):
-				if z2 != z:
-					listvalues2 = [row[z2] for row in self.data]
-					tmp_hist = np.array( np.asarray( Counter( zip(listvalues, listvalues2) ).values() )+ 1, dtype = float)
-					self.thetaD[z][z2] = tmp_hist / sum( tmp_hist)
-					self.values_Z_D.update({[z,z2]:c.keys()})
-
-			c = Counter( listvalues )
-			self.values_Z.update({z:c.keys()})
-			tmp_hist = (np.array( np.asarray( c.values() )+1 ,dtype=float)  )/ sum( np.asarray( c.values() )+1 )
-			self.theta.append(tmp_hist) 
-			self.no_Z[z] = len(self.values_Z[z] )	
-
+def numerical2category( listvalues, B ):
+    vals = [float( w ) for w in listvalues ]
+    
 
 
