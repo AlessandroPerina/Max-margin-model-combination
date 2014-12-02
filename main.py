@@ -1,6 +1,8 @@
 #main
 import os
 os.chdir('C:\Users\APerina\Desktop\Git\max-margin-model-combination')
+
+
 import data_reader as DR
 name = 'nursery'
 features, names =  DR.data_reader( name,  )

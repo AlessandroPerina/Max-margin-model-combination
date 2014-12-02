@@ -3,6 +3,8 @@ import os
 import numpy as np
 from collections import Counter
 
+
+
 def data_reader( name, label_id = 'last', type = 'C', has_index = True ):
     # C -> Categorical, N-> Numerical feature
     # label_id -> index of the labels 'last' or 'first'
@@ -64,35 +66,65 @@ def data_reader( name, label_id = 'last', type = 'C', has_index = True ):
         os.chdir('C:\Users\APerina\Desktop\Git\max-margin-model-combination')
 
 
-def MDLdiscretize( x, y, no_values = 10):
-    pass
-
-
-def _MDLfind_partition( x,y ):
+def MDL_discretize( x, y ):
+    T = len(x)
+    k = len( set( y) )
     xsort = [a for (a,b) in sorted( zip(x,y) )]
     ysort = [b for (a,b) in sorted( zip(x,y) )]
-    pass
 
+    cut_offs_list = []
+    if len(x) <= 2:
+        return []
+    else:
+        k1, k2, S1, S2, entS1, entS2, entS, Tz, cut_off_index = MLD_find_cut_off( xsort,ysort )
+        gain = entS - (S1/T)*entS1 - (S2/T)*entS2
+        delta = np.log2( 3**k - 2) - k*entS + k1*entS1 + k2*entS2
+        accept_cut = gain > np.log2( T - 1) / T + delta / T
+        if accept_cut:
+            cut_offs_list.append(Tz)
+            if len( set( ysort[0:cut_off_index+1] )) > 1:
+                MLD_find_cut_off( xsort[0:cut_off_index+1],ysort[0:cut_off_index+1] )
+            if len( set( ysort[cut_off_index+1:] )) > 1:
+                MLD_find_cut_off( xsort[cut_off_index+1:],ysort[cut_off_index+1:] )
+        else:
+            return []
 
-def _MLDpartition_value( xsort, ysort, idpartition ):
+        return cut_offs_list
+        
+
+def MLD_find_cut_off( xsort, ysort ):
     # Return the cut-off point
-
     T = len(xsort)
-    countc = [ ysort.count(a) for a in set(ysort)]
+    countc = np.asarray( [ ysort.count(a) for a in set(ysort)] )
+    entS = -sum( ( countc.astype(float) / T )*np.log2( 1e-30 + countc.astype(float) / T) )
 
     boundary_point = list()
-    for p in range(1,T-1):
-        if ysort[p] != ysort[p-1]:
+    for p in range(0,T-1):
+        if ysort[p] != ysort[p+1]:
             boundary_point.append(p)
 
     E = np.zeros( len( boundary_point ));
     for b in enumerate( boundary_point ):
         tmp = ysort[0:b[1]+1]
-        pcs1 = [ float( tmp.count(a) ) for a in set(tmp)] / countc
+        pcs1 = np.asarray( [ float( tmp.count(a) ) for a in set(tmp)] ) / countc
 
         tmp = ysort[b[1]+1:]
-        pcs2 = [ float( tmp.count(a) ) for a in set(tmp)] / countc
+        pcs2 = np.asarray( [ float( tmp.count(a) ) for a in set(tmp)] ) / countc
 
-        E[b[0]] = -( ((float(len(ysort[0:b[1]+1])-1))/T) *sum( pcs1*np.log( 1e-30 + pcs1 ) ) + ((float(len(ysort[b[1]+1:])-1))/T) *sum( pcs2*np.log( 1e-30 + pcs2 ) ) )
+        E[b[0]] = -( ((float(len(ysort[0:b[1]+1])-1))/T) *sum( pcs1*np.log2( 1e-30 + pcs1 ) ) + ((float(len(ysort[b[1]+1:])-1))/T) *sum( pcs2*np.log2( 1e-30 + pcs2 ) ) )
 
-    return xsort[b[E.argmin()]]
+    cut_off_index = boundary_point[E.argmin()]
+    k1 = len( set( ysort[0:cut_off_index+1] ))
+    k2 = len( set( ysort[cut_off_index+1:] ))
+
+    tmp = ysort[0:cut_off_index+1]
+    pcs1 = np.asarray( [ float( tmp.count(a) ) for a in set(tmp)] ) / countc
+    entS1 = -sum( pcs1*np.log2( 1e-30 + pcs1 ) )
+    S1 = len(  ysort[0:cut_off_index+1] )
+
+    tmp = ysort[cut_off_index+1:]
+    pcs2 = np.asarray( [ float( tmp.count(a) ) for a in set(tmp)] ) / countc
+    entS2 = -sum( pcs2*np.log2( 1e-30 + pcs2 ) )
+    S2 = len(  ysort[cut_off_index+1:] )
+
+    return k1, k2, S1, S2, entS1, entS2, entS, xsort[cut_off_index], cut_off_index
