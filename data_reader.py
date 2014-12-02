@@ -68,20 +68,20 @@ def data_reader( name, label_id = 'last', type = 'C', has_index = True ):
 
 def MDL_discretize( xsort, ysort, classes ):
     T = len(xsort)
-    classes = set( [int(i) for i in ysort] )
     k = len( classes)
+    print k
 
     cut_offs_list = list()
     if len(xsort) <= 2:
         return []
     else:
         k1, k2, S1, S2, entS1, entS2, entS, Tz, cut_off_index = MLD_find_cut_off( xsort,ysort, classes )
-        gain = entS - (S1/T)*entS1 - (S2/T)*entS2
+        S = S1+S2
+        gain = entS - (S1/S)*entS1 - (S2/S)*entS2
         delta = np.log2( 3**k - 2) - k*entS + k1*entS1 + k2*entS2
-        print gain + np.log2( T - 1) / T + delta / T
-        accept_cut = gain > np.log2( T - 1) / T + delta / T
+        accept_cut = gain > ( np.log2( S - 1) / S) +  ( delta / S )
+
         cut_offs_list += [Tz]
-        print cut_offs_list
         if accept_cut:
             if len( set( ysort[0:cut_off_index+1] )) > 1:
                 cut_offs_list += MDL_discretize( xsort[0:cut_off_index+1],ysort[0:cut_off_index+1], classes )
@@ -106,10 +106,10 @@ def MLD_find_cut_off( xsort, ysort, classes ):
     E = np.zeros( len( boundary_point ));
     for b in enumerate( boundary_point ):
         tmp = ysort[0:b[1]+1]
-        pcs1 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / countc
+        pcs1 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / (1e-30 + countc)
 
         tmp = ysort[b[1]+1:]
-        pcs2 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / countc
+        pcs2 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / (1e-30 + countc)
 
         E[b[0]] = -( ((float(len(ysort[0:b[1]+1])-1))/T) *sum( pcs1*np.log2( 1e-30 + pcs1 ) ) + ((float(len(ysort[b[1]+1:])-1))/T) *sum( pcs2*np.log2( 1e-30 + pcs2 ) ) )
 
@@ -118,12 +118,12 @@ def MLD_find_cut_off( xsort, ysort, classes ):
     k2 = len( set( ysort[cut_off_index+1:] ))
 
     tmp = ysort[0:cut_off_index+1]
-    pcs1 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / countc
+    pcs1 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / (1e-30 + countc)
     entS1 = -sum( pcs1*np.log2( 1e-30 + pcs1 ) )
     S1 = len(  ysort[0:cut_off_index+1] )
 
     tmp = ysort[cut_off_index+1:]
-    pcs2 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / countc
+    pcs2 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / (1e-30 + countc)
     entS2 = -sum( pcs2*np.log2( 1e-30 + pcs2 ) )
     S2 = len(  ysort[cut_off_index+1:] )
 
