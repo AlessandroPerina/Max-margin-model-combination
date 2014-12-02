@@ -66,36 +66,33 @@ def data_reader( name, label_id = 'last', type = 'C', has_index = True ):
         os.chdir('C:\Users\APerina\Desktop\Git\max-margin-model-combination')
 
 
-def MDL_discretize( x, y ):
-    T = len(x)
-    k = len( set( y) )
-    xsort = [a for (a,b) in sorted( zip(x,y) )]
-    ysort = [b for (a,b) in sorted( zip(x,y) )]
+def MDL_discretize( xsort, ysort, classes ):
+    T = len(xsort)
+    classes = set( [int(i) for i in ysort] )
+    k = len( classes)
 
-    cut_offs_list = []
-    if len(x) <= 2:
+    if len(xsort) <= 2:
         return []
     else:
-        k1, k2, S1, S2, entS1, entS2, entS, Tz, cut_off_index = MLD_find_cut_off( xsort,ysort )
+        k1, k2, S1, S2, entS1, entS2, entS, Tz, cut_off_index = MLD_find_cut_off( xsort,ysort, classes )
         gain = entS - (S1/T)*entS1 - (S2/T)*entS2
         delta = np.log2( 3**k - 2) - k*entS + k1*entS1 + k2*entS2
         accept_cut = gain > np.log2( T - 1) / T + delta / T
         if accept_cut:
-            cut_offs_list.append(Tz)
             if len( set( ysort[0:cut_off_index+1] )) > 1:
-                MLD_find_cut_off( xsort[0:cut_off_index+1],ysort[0:cut_off_index+1] )
+                cut_offs_list + MDL_discretize( xsort[0:cut_off_index+1],ysort[0:cut_off_index+1], classes )
             if len( set( ysort[cut_off_index+1:] )) > 1:
-                MLD_find_cut_off( xsort[cut_off_index+1:],ysort[cut_off_index+1:] )
+                cut_offs_list + MDL_discretize( xsort[cut_off_index+1:],ysort[cut_off_index+1:], classes )
         else:
             return []
 
-        return cut_offs_list
+        return Tz
         
 
-def MLD_find_cut_off( xsort, ysort ):
+def MLD_find_cut_off( xsort, ysort, classes ):
     # Return the cut-off point
     T = len(xsort)
-    countc = np.asarray( [ ysort.count(a) for a in set(ysort)] )
+    countc = np.asarray( [ ysort.count(a) for a in classes] )
     entS = -sum( ( countc.astype(float) / T )*np.log2( 1e-30 + countc.astype(float) / T) )
 
     boundary_point = list()
@@ -106,10 +103,10 @@ def MLD_find_cut_off( xsort, ysort ):
     E = np.zeros( len( boundary_point ));
     for b in enumerate( boundary_point ):
         tmp = ysort[0:b[1]+1]
-        pcs1 = np.asarray( [ float( tmp.count(a) ) for a in set(tmp)] ) / countc
+        pcs1 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / countc
 
         tmp = ysort[b[1]+1:]
-        pcs2 = np.asarray( [ float( tmp.count(a) ) for a in set(tmp)] ) / countc
+        pcs2 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / countc
 
         E[b[0]] = -( ((float(len(ysort[0:b[1]+1])-1))/T) *sum( pcs1*np.log2( 1e-30 + pcs1 ) ) + ((float(len(ysort[b[1]+1:])-1))/T) *sum( pcs2*np.log2( 1e-30 + pcs2 ) ) )
 
@@ -118,12 +115,12 @@ def MLD_find_cut_off( xsort, ysort ):
     k2 = len( set( ysort[cut_off_index+1:] ))
 
     tmp = ysort[0:cut_off_index+1]
-    pcs1 = np.asarray( [ float( tmp.count(a) ) for a in set(tmp)] ) / countc
+    pcs1 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / countc
     entS1 = -sum( pcs1*np.log2( 1e-30 + pcs1 ) )
     S1 = len(  ysort[0:cut_off_index+1] )
 
     tmp = ysort[cut_off_index+1:]
-    pcs2 = np.asarray( [ float( tmp.count(a) ) for a in set(tmp)] ) / countc
+    pcs2 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / countc
     entS2 = -sum( pcs2*np.log2( 1e-30 + pcs2 ) )
     S2 = len(  ysort[cut_off_index+1:] )
 
