@@ -71,22 +71,25 @@ def MDL_discretize( xsort, ysort, classes ):
     classes = set( [int(i) for i in ysort] )
     k = len( classes)
 
+    cut_offs_list = list()
     if len(xsort) <= 2:
         return []
     else:
         k1, k2, S1, S2, entS1, entS2, entS, Tz, cut_off_index = MLD_find_cut_off( xsort,ysort, classes )
         gain = entS - (S1/T)*entS1 - (S2/T)*entS2
         delta = np.log2( 3**k - 2) - k*entS + k1*entS1 + k2*entS2
+        print gain + np.log2( T - 1) / T + delta / T
         accept_cut = gain > np.log2( T - 1) / T + delta / T
+        cut_offs_list += [Tz]
+        print cut_offs_list
         if accept_cut:
             if len( set( ysort[0:cut_off_index+1] )) > 1:
-                cut_offs_list + MDL_discretize( xsort[0:cut_off_index+1],ysort[0:cut_off_index+1], classes )
+                cut_offs_list += MDL_discretize( xsort[0:cut_off_index+1],ysort[0:cut_off_index+1], classes )
             if len( set( ysort[cut_off_index+1:] )) > 1:
-                cut_offs_list + MDL_discretize( xsort[cut_off_index+1:],ysort[cut_off_index+1:], classes )
+                cut_offs_list += MDL_discretize( xsort[cut_off_index+1:],ysort[cut_off_index+1:], classes )
         else:
-            return []
-
-        return Tz
+            return cut_offs_list
+        return cut_offs_list
         
 
 def MLD_find_cut_off( xsort, ysort, classes ):
