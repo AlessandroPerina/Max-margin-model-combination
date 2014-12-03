@@ -69,7 +69,6 @@ def data_reader( name, label_id = 'last', type = 'C', has_index = True ):
 def MDL_discretize( xsort, ysort, classes ):
     T = len(xsort)
     k = len( classes)
-    print k
 
     cut_offs_list = list()
     if len(xsort) <= 2:
@@ -83,9 +82,9 @@ def MDL_discretize( xsort, ysort, classes ):
 
         cut_offs_list += [Tz]
         if accept_cut:
-            if len( set( ysort[0:cut_off_index+1] )) > 1:
+            if len( set( ysort[0:cut_off_index+1] )) > 1 and not not MDL_compute_boundary( xsort[0:cut_off_index+1], ysort[0:cut_off_index+1] ):
                 cut_offs_list += MDL_discretize( xsort[0:cut_off_index+1],ysort[0:cut_off_index+1], classes )
-            if len( set( ysort[cut_off_index+1:] )) > 1:
+            if len( set( ysort[cut_off_index+1:] )) > 1 and not not MDL_compute_boundary( xsort[cut_off_index+1:], ysort[cut_off_index+1:] ):
                 cut_offs_list += MDL_discretize( xsort[cut_off_index+1:],ysort[cut_off_index+1:], classes )
         else:
             return cut_offs_list
@@ -93,38 +92,47 @@ def MDL_discretize( xsort, ysort, classes ):
         
 
 def MLD_find_cut_off( xsort, ysort, classes ):
+    eps = np.spacing(1)
     # Return the cut-off point
     T = len(xsort)
     countc = np.asarray( [ ysort.count(a) for a in classes] )
-    entS = -sum( ( countc.astype(float) / T )*np.log2( 1e-30 + countc.astype(float) / T) )
+    entS = -sum( ( countc.astype(float) / T )*np.log2( eps + countc.astype(float) / T) )
 
-    boundary_point = list()
-    for p in range(0,T-1):
-        if ysort[p] != ysort[p+1]:
-            boundary_point.append(p)
+    boundary_point = MDL_compute_boundary( xsort, ysort )
 
     E = np.zeros( len( boundary_point ));
     for b in enumerate( boundary_point ):
         tmp = ysort[0:b[1]+1]
-        pcs1 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / (1e-30 + countc)
+        pcs1 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) 
+        pcs1 /= (eps + sum( pcs1))
 
         tmp = ysort[b[1]+1:]
-        pcs2 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / (1e-30 + countc)
+        pcs2 = np.asarray( [ float( tmp.count(a) ) for a in classes] )
+        pcs2 /= (eps + sum( pcs2))
 
-        E[b[0]] = -( ((float(len(ysort[0:b[1]+1])-1))/T) *sum( pcs1*np.log2( 1e-30 + pcs1 ) ) + ((float(len(ysort[b[1]+1:])-1))/T) *sum( pcs2*np.log2( 1e-30 + pcs2 ) ) )
+        E[b[0]] = -( ((float(len(ysort[0:b[1]+1])))/T) *sum( pcs1*np.log2( eps + pcs1 ) ) + ((float(len(ysort[b[1]+1:])))/T) *sum( pcs2*np.log2( eps + pcs2 ) ) )
 
     cut_off_index = boundary_point[E.argmin()]
     k1 = len( set( ysort[0:cut_off_index+1] ))
     k2 = len( set( ysort[cut_off_index+1:] ))
 
     tmp = ysort[0:cut_off_index+1]
-    pcs1 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / (1e-30 + countc)
-    entS1 = -sum( pcs1*np.log2( 1e-30 + pcs1 ) )
+    pcs1 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / (eps + countc)
+    entS1 = -sum( pcs1*np.log2( eps + pcs1 ) )
     S1 = len(  ysort[0:cut_off_index+1] )
 
     tmp = ysort[cut_off_index+1:]
-    pcs2 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / (1e-30 + countc)
-    entS2 = -sum( pcs2*np.log2( 1e-30 + pcs2 ) )
+    pcs2 = np.asarray( [ float( tmp.count(a) ) for a in classes] ) / (eps + countc)
+    entS2 = -sum( pcs2*np.log2( eps + pcs2 ) )
     S2 = len(  ysort[cut_off_index+1:] )
 
     return k1, k2, S1, S2, entS1, entS2, entS, xsort[cut_off_index], cut_off_index
+
+def MDL_compute_boundary( xsort, ysort ):
+
+    T = len(xsort)
+    boundary_point = list()
+    for p in range(0,T-1):
+        if ysort[p] != ysort[p+1] and xsort[p] != xsort[p+1]:
+            boundary_point.append(p)
+    return boundary_point

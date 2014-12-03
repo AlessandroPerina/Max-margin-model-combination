@@ -14,13 +14,22 @@ except:
 
 name = 'glass'
 features2, names2, X, y =  DR.data_reader( name, 'last', 'N', True )
-x = X[:,0]
-print "discretize"
 
-xsort = [a for (a,b) in sorted( zip(x,y) )]
-ysort = [b for (a,b) in sorted( zip(x,y) )]
+no_cut_offs = np.zeros(len( X[1]))
+for z in range( len( X[1]) ):
+    x = X[:,z]
+    #xsort = [a for (a,b) in sorted( zip(x,y) )]
+    #ysort = [b for (a,b) in sorted( zip(x,y) )]
 
-cut_off_list = DR.MDL_discretize(xsort,ysort,list())
+    xsort = list(  np.sort( x ) )
+    idsort = np.argsort( x )
+    ysort2 = list( y[idsort] )
+
+
+    CL = DR.MDL_discretize(xsort,ysort, set( ysort)  )
+    no_cut_offs[z] = len(CL)
+
+
 
 
 
