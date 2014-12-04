@@ -48,16 +48,20 @@ def data_reader( name, label_id = 'last', type = 'C', has_index = True ):
                 features[:,z] = [list(set(listvalues)).index( w ) for w in listvalues]
 
         if has_index:
-             y = features[:,-1]
-             C = len( set( y ))
-             X = features[:,1:-1]
+            y = features[:,-1]
+            C = len( set( y ))
+            X = features[:,1:-1]
+            kind_Z.pop(0)
+            kind_Z.pop(-1)
         else:
             if label_id == 'last':
                 y = features[:,-1]
                 X = features[:,0:-1]
+                kind_Z.pop(-1)
             else:
                 y = features[:,0]
                 X = features[:,1:]
+                kind_Z.pop(0)
 
         os.chdir(base_directory)
         return features, names_Z, X, y
@@ -89,8 +93,6 @@ def MDL_discretize( xsort, ysort, classes ):
         else:
             return cut_offs_list
         return cut_offs_list
-        
-
 def MLD_find_cut_off( xsort, ysort, classes ):
     eps = np.spacing(1)
     # Return the cut-off point
@@ -127,7 +129,6 @@ def MLD_find_cut_off( xsort, ysort, classes ):
     S2 = len(  ysort[cut_off_index+1:] )
 
     return k1, k2, S1, S2, entS1, entS2, entS, xsort[cut_off_index], cut_off_index
-
 def MDL_compute_boundary( xsort, ysort ):
 
     T = len(xsort)
