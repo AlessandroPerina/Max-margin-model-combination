@@ -39,3 +39,16 @@ for train_index, test_index in skf:
         tmp[:,z] = np.digitize(X[:,z],bins)
     data.append(tmp)
 
+from aode import aode
+
+
+counter = 0
+for train_index, test_index in skf:
+    X_train = data[counter][train_index,:]
+    X_test = data[counter][test_index,:]
+    y_train = y[train_index]
+    y_test = y[test_index]
+
+    
+
+    counter +=1
