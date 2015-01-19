@@ -3,7 +3,7 @@ import os
 import numpy as np
 from sklearn import cross_validation
 from matplotlib import  pyplot as pp
-os.chdir('C:\Users\APerina\Desktop\Git\max-margin-model-combination')
+os.chdir('C:\Users\wilde_000\Desktop\git\max-margin-model-combination')
 try:
     __import__('imp').find_module('DR')
     reload( DR )
@@ -42,9 +42,9 @@ for train_index, test_index in skf:
         tmp[:,z] = np.digitize(X[:,z],bins)
     data.append(tmp)
 
-from aode import aode
 
-
+# This is code to use in a separate QT Console!
+# NOW I HAVE THE DATA FOR A FOLD 
 counter = 0
 for train_index, test_index in skf:
     X_train = data[counter][train_index,:]
@@ -56,8 +56,12 @@ for train_index, test_index in skf:
 
     counter +=1
 
-
-
-# NOW I HAVE THE DATA FOR A FOLD -- This is code to use in a separate QT Cons
 from aode import *
-clsf = aode()
+naive_bayes = aode()
+naive_bayes.fit_nb( X_train, y_train )
+
+import pdb  #debugger
+ode_test = aode()
+ode_test.fit_ode( X_train, y_train, 0 )
+
+
