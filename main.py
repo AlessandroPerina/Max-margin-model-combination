@@ -2,7 +2,7 @@
 import os
 import numpy as np
 from sklearn import cross_validation
-skf = cross_validation.StratifiedKFold(y, n_folds= no_folds)
+from matplotlib import  pyplot as pp
 os.chdir('C:\Users\APerina\Desktop\Git\max-margin-model-combination')
 try:
     __import__('imp').find_module('DR')
@@ -18,6 +18,9 @@ no_folds = 3
 
 name = 'glass'
 raw_data, names, X, y =  DR.data_reader( name, 'last', 'N', True )
+
+pp.imshow(X,aspect=float( X.shape[1])/float( X.shape[0] ) ,interpolation='none')
+
 
 skf = cross_validation.StratifiedKFold(y, n_folds= no_folds)
 data = list()
@@ -52,3 +55,9 @@ for train_index, test_index in skf:
     
 
     counter +=1
+
+
+
+# NOW I HAVE THE DATA FOR A FOLD -- This is code to use in a separate QT Cons
+from aode import *
+clsf = aode()

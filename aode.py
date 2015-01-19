@@ -3,26 +3,19 @@ from pandas import crosstab
 
 class aode:
     def __init__(self, laplace_estimate = 1, min_occurrence = 30):
-        self.Fath = feature_father  
+        self.Fath = []
         self.Z = [] # Number of features
         self.Lap = laplace_estimate
-        self.MinOc = min_occurrence
-        if not self.Fath:
-            self.type = 'ode'
-        else:
-            self.type = 'nb'
+        self.M = min_occurrence
         self.pxy = []
         self.names = []
 
     def fit_nb(self, X, y):
-        # Calling the wrong estimator
-        if self.type == 'ode':
-            self.fit_ode(X, y)
-        Z = X.shape[1]
+
         C = len( set(y)) 
         self.py = np.array([ list(y).count(i) for i in set( y )], float ) / X.shape[0]
         self.pxy = list()
-        self.Z = Z
+        self.Z = X.shape[1]
         self.names = list()
         for z in range(self.Z):
             tmp = crosstab( X[:,z], y )
@@ -30,15 +23,13 @@ class aode:
             self.pxy.append( tmp )
             self.names = map(int,list( set( X[:,z] )))
 
-    def fit_ode(self,X, y):
+    def fit_ode(self,X, y, father):
         # Calling the wrong estimator
-        if self.type == 'nb':
-            self.fit_nb(X, y)
+        self.Fath = father
 
-        Z = X.shape[1]
+        self.Z = X.shape[1]
         C = len( set(y))
         pxy = list()
-        self.Z = Z
         self.names = list()
         for z in range(self.Z):
             tmp = crosstab( X[:,z], y )
@@ -47,7 +38,11 @@ class aode:
             self.names = map(int,list( set( X[:,z] )))   
 
 
-
+    def fit_aode(self, X,y):
+        self.Z = X.shape[1]
+        for z in range( self.Z):
+            pass
+            
     def evaluate(self, X):
         pass
 
