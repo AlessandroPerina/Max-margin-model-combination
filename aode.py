@@ -2,16 +2,17 @@ import numpy as np
 from pandas import crosstab
 
 class ode:
+
     def __init__(self, laplace_estimate = 1, min_occurrence = 30):
         self.father = []
         self.Z = [] # Number of features
-        self.Lap = laplace_estimate
-        self.M = min_occurrence
-        self.py = list()
-        self.pxy = list()
-        self.pxyx = list()
-        self.names = dict()
-        self.kind = 'empty'
+        self.Lap = laplace_estimate # constant to add for laplace estimate
+        self.M = min_occurrence # Min number of occurrences to collect robust statistics
+        self.py = list() # List of classes
+        self.pxy = list() # P(x = a | y) for each y
+        self.pxyx = list() # P(x = a | y, x_father = b) for each y
+        self.names = dict() # feature_nr : values_in_train_set
+        self.kind = 'empty' # empty or Naive Bayes or One-Dependency Esitimator
 
     def fit_nb(self, X, y):
 
@@ -50,6 +51,7 @@ class ode:
                     tmp = np.asarray( tmp + self.Lap ).astype(float) / ( ( np.asarray( tmp +self.Lap ) ).sum(0))
                     self.pxyx.append( tmp )
                     self.names[z] = map(int,list( set( X[self.y == curr_y,z] )))
+        
         self.kind = 'One-Dependency Estimator'
 
 class aode:
