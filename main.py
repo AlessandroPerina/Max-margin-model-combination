@@ -56,12 +56,22 @@ for train_index, test_index in skf:
 
     counter +=1
 
-from aode import *
-naive_bayes = aode()
-naive_bayes.fit_nb( X_train, y_train )
+import aode
+import pdb  #debugger - in the case I need it
+#Package name : aode
+#Classes: ode, aode - Naive bayes is a ode without father
+nb = aode.ode()
+nb.fit_nb( X_train, y_train )
 
-import pdb  #debugger
-ode_test = aode()
-ode_test.fit_ode( X_train, y_train, 0 )
+
+od = aode.ode()
+od.fit_ode( X_train, y_train, 0 )
+
+Sh = nb.pxy[0]
+pp.imshow(Sh,aspect=float( Sh.shape[1])/float( Sh.shape[0] ) ,interpolation='none')
+
+Sh = od.pxy[0]
+pp.imshow(Sh,aspect=float( Sh.shape[1])/float( Sh.shape[0] ) ,interpolation='none')
+
 
 
