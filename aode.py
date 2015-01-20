@@ -13,45 +13,67 @@ class ode:
         self.pxyx = list() # P(x = a | y, x_father = b) for each y
         self.names = dict() # feature_nr : values_in_train_set
         self.kind = 'empty' # empty or Naive Bayes or One-Dependency Esitimator
+        self.Zval = list()
+        self.C = []
 
     def fit_nb(self, X, y):
-        C = len( set(y)) 
+        self.C = map(int, list( set(y)) )
         self.py = np.array([ list(y).count(i) for i in set( y )], float ) / X.shape[0]
         self.Z = X.shape[1]
+        self.Zval = map( len, map( np.unique, X.T ) )
+
         for z in range(self.Z):
             tmp = crosstab( X[:,z], y )
             tmp = np.asarray( tmp + self.Lap ).astype(float) / ( ( np.asarray( tmp +self.Lap ) ).sum(0))
-            self.pxy.append( tmp )
+            self.pxy.append( tmp ) # Trasposition for a better indexing
             self.pxyx.append( None )
             self.names[z] = map(int,list( set( X[:,z] )))
         self.kind = 'Naive Bayes'
 
-    def fit_ode(self,X, y, father):
-        # Calling the wrong estimator
+    def fit_ode(self, X, y, father):
         self.father = father
-        self.Z = X.shape[1]
-        C = len( set(y) )
+        self.Z = X.shape[1] # No of features
+        self.Zval = map( len, map( np.unique, X.T ) )
+        self.C = map(int, list( set(y)) )
         self.py = np.array([ list(y).count(i) for i in set( y )], float ) / X.shape[0]
-        # P(x|y,x_father)
+        self.names[self.father] = map(int,list( set( X[:,self.father] )))
+
         for z in range(self.Z):
+            self.names[z] = map(int,list( set( X[:,z] )))
             if z is father:
                 tmp = crosstab( X[:,self.father], y )
                 tmp = np.asarray( tmp + self.Lap ).astype(float) / ( ( np.asarray( tmp +self.Lap ) ).sum(0))
+                tmp = tmp.T
                 self.pxy.append( tmp )
                 self.pxyx.append( None )
-                self.names[self.father] = map(int,list( set( X[:,self.father] ))) 
             else:
+                tmp_array = list() 
                 for curr_y in set( y ):
-                    tmp = crosstab( X[y == curr_y,z], X[y == curr_y,self.father] )
-                    tmp = np.asarray( tmp + self.Lap ).astype(float) / ( ( np.asarray( tmp +self.Lap ) ).sum(0))
-                    self.pxyx.append( tmp )
-                    self.pxy.append( None )
+                    ct = crosstab( X[y == curr_y,z], X[y == curr_y,self.father] )
+                    ct = ct.reindex_axis( self.names[z], axis=0).fillna(0)
+                    ct = ct.reindex_axis( self.names[self.father], axis=1).fillna(0)
+                    pxx = np.asarray ( (ct + self.Lap).apply(lambda r: r/r.sum(), axis=0) )
+                    tmp_array.append( pxx.T ) # Trasposition for a better indexing
+                self.pxyx.append( tmp_array )
+                self.pxy.append( None )
 
-                    self.names[z] = map(int,list( set( X[y == curr_y,z] )))
         self.kind = 'One-Dependency Estimator'
 
-
 '''
+    def ode_likelihood(self, X):
+        # 
+        [T,Z] = X.shape
+        LL = np.zeros([T,len(C)])
+        id_no_fahter = [i for i in range(len(self.C)) if self.pxy[i] is not None]
+        id_has_father = [i for i in range(len(self.C)) if self.pxyx[i] is not None]
+        for y_cur = self.C:
+            LL = log( self.py[y_cur] ) + 
+
+
+
+
+
+
 class aode:
 
     def __init__(self):
