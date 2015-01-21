@@ -1,4 +1,6 @@
 #main
+
+print "importing modules..."
 import os
 import numpy as np
 from sklearn import cross_validation
@@ -9,6 +11,7 @@ try:
     reload( DR )
 except:
     import data_reader as DR
+
 
 no_folds = 3
 
@@ -62,16 +65,29 @@ import pdb  #debugger - in the case I need it
 #Classes: ode, aode - Naive bayes is a ode without father
 nb = aode.ode()
 nb.fit_nb( X_train, y_train )
+LL, y_predict = nb.ode_likelihood( X_test )
+accuracy_nb = float( sum( y_predict == y_test ))*100 / len( y_test )
+
+accuracy_ode = np.zeros([X_train.shape[1]])
+for z in range(Z):
+    od = aode.ode()
+    od.fit_ode( X_train, y_train, z )
+    LL, y_predict = od.ode_likelihood( X_test )
+    accuracy_ode[z] = float( sum( y_predict == y_test ))*100 / len( y_test )
+    del od
+
+pp.plot(range(Z),accuracy_nb)
+pp.plot(range(Z),accuracy_ode)
+
+Sh = LL
+pp.imshow(Sh,aspect=float( Sh.shape[1])/float( Sh.shape[0] ) ,interpolation='none')
 
 
-od = aode.ode()
-od.fit_ode( X_train, y_train, 0 )
 
+'''
 Sh = nb.pxy[0]
 pp.imshow(Sh,aspect=float( Sh.shape[1])/float( Sh.shape[0] ) ,interpolation='none')
 
 Sh = od.pxy[0]
 pp.imshow(Sh,aspect=float( Sh.shape[1])/float( Sh.shape[0] ) ,interpolation='none')
-
-
-
+'''

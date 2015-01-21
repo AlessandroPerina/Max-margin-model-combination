@@ -1,5 +1,8 @@
+# Statements to initalize the module. These are executed ONLY the first time
+# the module name is encountered
 import numpy as np
 from pandas import crosstab
+
 
 class ode:
 
@@ -25,6 +28,7 @@ class ode:
         for z in range(self.Z):
             tmp = crosstab( X[:,z], y )
             tmp = np.asarray( tmp + self.Lap ).astype(float) / ( ( np.asarray( tmp +self.Lap ) ).sum(0))
+            tmp = tmp.T
             self.pxy.append( tmp ) # Trasposition for a better indexing
             self.pxyx.append( None )
             self.names[z] = map(int,list( set( X[:,z] )))
@@ -59,21 +63,46 @@ class ode:
 
         self.kind = 'One-Dependency Estimator'
 
-'''
     def ode_likelihood(self, X):
         # 
         [T,Z] = X.shape
-        LL = np.zeros([T,len(C)])
-        id_no_fahter = [i for i in range(len(self.C)) if self.pxy[i] is not None]
-        id_has_father = [i for i in range(len(self.C)) if self.pxyx[i] is not None]
-        for y_cur = self.C:
-            LL = log( self.py[y_cur] ) + 
+        LL = np.zeros([T,len(self.C)])
+        id_has_father = [i for i in range(self.Z) if self.pxyx[i] is not None]
+        id_no_father = [i for i in range(self.Z) if self.pxy[i] is not None] 
+        for y_cur in range( len(self.C)):
+            for t in range(T):
+                LL[t,y_cur] += np.log( self.py[y_cur] ) 
+                for z in id_no_father:
+                    idz = int(X[t][z])-1
+                    LL[t,y_cur] += np.log( self.pxy[z][y_cur][idz] )
+
+                for z in id_has_father:
+                    idz = int(X[t][z])-1
+                    idf = int(X[t][self.father])-1
+                    LL[t,y_cur] += np.log( self.pxyx[z][y_cur][idf][idz] )
+        
+        y_predict = np.asarray( [self.C[i] for i in np.argmax(LL,axis=1)] )
+        return LL, y_predict
+
+
+'''
+def generate_matrices( odeobj ):
+    try:
+        M = max( odeobj.Zval )
+        C = len( odeobj.C )
+        Mpxy = np.zeros([odeobj.Z,C,M]).astype(float)
+        Mpxyx = np.zeros([odeobj.Z,C,M,M]).astype(float)
+        for z in range(Z):
+            for y in odeboj.C:
 
 
 
+    except Exception, e:
+        raise e
+'''
 
 
-
+'''
 class aode:
 
     def __init__(self):
