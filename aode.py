@@ -6,7 +6,7 @@ from pandas import crosstab
 
 class ode:
 
-    def __init__(self, laplace_estimate = 1, min_occurrence = 30):
+    def __init__(self, min_occurrence = 10,  laplace_estimate = 1):
         self.father = []
         self.Z = [] # Number of features
         self.Lap = laplace_estimate # constant to add for laplace estimate
@@ -18,6 +18,8 @@ class ode:
         self.kind = 'empty' # empty or Naive Bayes or One-Dependency Esitimator
         self.Zval = list()
         self.C = []
+        self.M = min_occurrence
+        self.val = list()
 
     def fit_nb(self, X, y):
         self.C = map(int, list( set(y)) )
@@ -26,13 +28,18 @@ class ode:
         self.Zval = map( len, map( np.unique, X.T ) )
 
         for z in range(self.Z):
-            tmp = crosstab( X[:,z], y )
-            tmp = np.asarray( tmp + self.Lap ).astype(float) / ( ( np.asarray( tmp +self.Lap ) ).sum(0))
+            self.names[z] = map(int,list( set( X[:,z] )))
+            ct = crosstab( X[:,z], y )
+            ct = ct.reindex_axis( self.names[z], axis=0).fillna(0)
+            ct = ct.reindex_axis( self.C, axis=1).fillna(0)
+            tmp = np.asarray ( (ct + self.Lap).apply(lambda r: r/r.sum(), axis=0) )
             tmp = tmp.T
             self.pxy.append( tmp ) # Trasposition for a better indexing
             self.pxyx.append( None )
             self.names[z] = map(int,list( set( X[:,z] )))
         self.kind = 'Naive Bayes'
+
+
 
     def fit_ode(self, X, y, father):
         self.father = father
@@ -41,12 +48,16 @@ class ode:
         self.C = map(int, list( set(y)) )
         self.py = np.array([ list(y).count(i) for i in set( y )], float ) / X.shape[0]
         self.names[self.father] = map(int,list( set( X[:,self.father] )))
+        self.validity = map( int, np.histogram( X[:,self.father], np.unique(X[:,self.father] ))[0] > self.M) 
 
         for z in range(self.Z):
             self.names[z] = map(int,list( set( X[:,z] )))
             if z is father:
-                tmp = crosstab( X[:,self.father], y )
-                tmp = np.asarray( tmp + self.Lap ).astype(float) / ( ( np.asarray( tmp +self.Lap ) ).sum(0))
+                self.names[z] = map(int,list( set( X[:,z] )))
+                ct = crosstab( X[:,z], y )
+                ct = ct.reindex_axis( self.names[z], axis=0).fillna(0)
+                ct = ct.reindex_axis( self.C, axis=1).fillna(0)
+                tmp = np.asarray ( (ct + self.Lap).apply(lambda r: r/r.sum(), axis=0) )
                 tmp = tmp.T
                 self.pxy.append( tmp )
                 self.pxyx.append( None )
@@ -71,19 +82,23 @@ class ode:
         id_no_father = [i for i in range(self.Z) if self.pxy[i] is not None] 
         for y_cur in range( len(self.C)):
             for t in range(T):
-                LL[t,y_cur] += np.log( self.py[y_cur] ) 
+                LL[t,y_cur] = np.log( self.py[y_cur] ) + \
+                sum( [np.log( self.pxy[z][y_cur][self.names[z].index( X[t][z] )] ) for z in id_no_father if X[t][z] in self.names[z] ] ) + \
+                sum( [self.validity[int( X[t][self.father] )-1]*np.log( self.pxyx[z][y_cur][self.names[self.father].index( X[t][self.father] )][self.names[z].index( X[t][z] )] ) for z in id_has_father if X[t][z] in self.names[z] and X[t][self.father] in self.names[self.father] ] )
+
+        y_predict = np.asarray( [self.C[i] for i in np.argmax(LL,axis=1)] )
+        return LL, y_predict
+
+
+    '''
                 for z in id_no_father:
                     idz = int(X[t][z])-1
-                    LL[t,y_cur] += np.log( self.pxy[z][y_cur][idz] )
-
+                    LL[t,y_cur] += np.log( self.pxy[z][y_cur][idz] 
                 for z in id_has_father:
                     idz = int(X[t][z])-1
                     idf = int(X[t][self.father])-1
                     LL[t,y_cur] += np.log( self.pxyx[z][y_cur][idf][idz] )
-        
-        y_predict = np.asarray( [self.C[i] for i in np.argmax(LL,axis=1)] )
-        return LL, y_predict
-
+   '''     
 
 '''
 def generate_matrices( odeobj ):

@@ -130,8 +130,6 @@ def MLD_find_cut_off( xsort, ysort, classes ):
     S2 = len(  ysort[cut_off_index+1:] )
 
     return k1, k2, S1, S2, entS1, entS2, entS, xsort[cut_off_index], cut_off_index
-
-
 def MDL_compute_boundary( xsort, ysort ):
 
     T = len(xsort)

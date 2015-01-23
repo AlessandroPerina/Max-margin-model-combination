@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{9cbf0305-4d2f-4f47-9c46-bc53bbed8753}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>data_reader.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId />
+    <InterpreterVersion />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="data_reader.py" />
+    <Compile Include="main.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Datasets\Adult\adult.names.txt" />
+    <Content Include="Datasets\Chess\kr-vs-kp.names.txt" />
+    <Content Include="Datasets\Glass\glass.names.txt" />
+    <Content Include="Datasets\LungCancer\lung-cancer.names.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Datasets\" />
+    <Folder Include="Datasets\Adult" />
+    <Folder Include="Datasets\Chess" />
+    <Folder Include="Datasets\Glass" />
+    <Folder Include="Datasets\LungCancer" />
+  </ItemGroup>
+  <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
+</Project>
