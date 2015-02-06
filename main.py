@@ -17,11 +17,11 @@ except:
 
 no_folds = 10
 
-#name = 'nursery'
-#raw_data, names, X, y =  DR.data_reader( name, 'last', 'C', True )
+name = 'nursery'
+raw_data, names, X, y =  DR.data_reader( name, 'last', 'C', True )
 
-name = 'glass'
-raw_data, names, X, y =  DR.data_reader( name, 'last', 'N', True )
+#name = 'glass'
+#raw_data, names, X, y =  DR.data_reader( name, 'last', 'N', True )
 
 C = set(y)
 skf = cross_validation.StratifiedKFold(y, n_folds= no_folds)
@@ -38,17 +38,18 @@ for train_index, test_index in skf:
     y_trainD = y[train_index]
     y_testD = y[test_index]
     tmp = np.zeros( X.shape) 
-    for z in [i for i in range( len( X_trainD[1]) ) if names[i] == 'numerical']:
-        xsort = list(  np.sort( X_trainD[:,z] ) )
-        idsort = np.argsort( X_trainD[:,z] )
-        ysort = list( y_trainD[idsort] )
-        bins = DR.MDL_discretize(xsort,ysort, set( ysort)  )
-        bins.sort()
+    for z in range( len( X_trainD[1]) ):
+        if  names[z] == 'numerical':
+            xsort = list(  np.sort( X_trainD[:,z] ) )
+            idsort = np.argsort( X_trainD[:,z] )
+            ysort = list( y_trainD[idsort] )
+            bins = DR.MDL_discretize(xsort,ysort, set( ysort)  )
+            bins.sort()
 
-        Z_per_fold[counter,z] = len( bins ) + 1
-        tmp[:,z] = np.digitize(X[:,z],bins,right=True )
-
-    Xtmp = tmp
+            Z_per_fold[counter,z] = len( bins ) + 1
+            tmp[:,z] = np.digitize(X[:,z],bins,right=True )
+        else:
+            tmp[:,z] = X[:,z]
 
     data.append(tmp)
     counter +=1
@@ -123,6 +124,7 @@ accuracy_allm = np.zeros(no_folds)
 import objfun as of
 from scipy.optimize import fmin_l_bfgs_b
 counter = 0
+Cl = len(C)
 for train_index, test_index in skf:
 
     X_train = data[counter][train_index,:]
@@ -154,7 +156,9 @@ for train_index, test_index in skf:
         Px[:,z,0,:] = LL.T
         del od
 
-    sio.savemat(name + "_fold_" + str(counter+1), {'Px':Px, 'Px_te':Px_te, 'y':y_train, 'y_te':y_test})
+    y_train2 = [list(set(y_train)).index(y_train[i]) for i,v in enumerate(y_train)]
+    y_test2 = [list(set(y_test)).index(y_test[i]) for i,v in enumerate(y_test)]
+    sio.savemat(name + "_fold_" + str(counter+1), {'Px':Px, 'Px_te':Px_te, 'y':y_train2, 'y_te':y_test2})
     y_predict = np.asarray( [list( set( y_train))[i] for i in np.argmax(LL_aode,axis=1)] )
     accuracy_aode[counter] = float( sum( y_predict == y_test ))*100 / len( y_test )
     del nb
