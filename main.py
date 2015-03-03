@@ -5,8 +5,12 @@ import imp
 import os
 import numpy as np
 from sklearn import cross_validation
+from sklearn.svm import SVC
+from sklearn.grid_search import GridSearchCV
+from sklearn import preprocessing, cross_validation
 from matplotlib import  pyplot as pp
 import scipy.io as sio
+from sklearn import metrics
 os.chdir('C:\Users\APerina\Desktop\Git\max-margin-model-combination')
 try:
     __import__('imp').find_module('DR')
@@ -16,12 +20,19 @@ except:
 
 
 no_folds = 10
-
+'''
 name = 'nursery'
-raw_data, names, X, y =  DR.data_reader( name, 'last', 'C', True )
+label_id = 'last'
+type_attributes = 'C' 
+has_index = False
+'''
 
-#name = 'glass'
-#raw_data, names, X, y =  DR.data_reader( name, 'last', 'N', True )
+name = 'glass'
+label_id = 'last'
+type_attributes = 'N' 
+has_index = False
+raw_data, names, X, y =  DR.data_reader( name, label_id, type_attributes, has_index )
+
 
 C = set(y)
 skf = cross_validation.StratifiedKFold(y, n_folds= no_folds)
@@ -68,6 +79,8 @@ except ImportError:
 import pdb  #debugger - in the case I need it
 #Package name : aode
 #Classes: ode, aode - Naive bayes is a ode without father
+
+'''
 accuracy_ode = np.zeros([no_folds,X.shape[1]])
 accuracy_nb = np.zeros(no_folds)
 accuracy_aode = np.zeros(no_folds)
@@ -112,6 +125,7 @@ for train_index, test_index in skf:
 
 #counter +=1
  #pp.plot(range(Z),np.tile(accuracy_nb.mean(),Z),'ys',range(Z),np.tile(accuracy_aode.mean(),Z), range(Z),accuracy_ode.mean(0),'rs')
+ '''
 
 # OTHER COMBINATION METHODS
 accuracy_ode = np.zeros([no_folds,X.shape[1]])
@@ -205,30 +219,38 @@ for train_index, test_index in skf:
     wf /= sum(wf)
     y_predict = [list( set(y) )[item] for item in list((lPx_te_all * wf[:None,None]).sum(1).argmax(0) )]
     accuracy_rbc[counter] = float( sum( y_predict == y_test ))*100 / len( y_test )
-    
-
-    lamb = 1
-    wfc = np.zeros([Cl,Z])
-    for c in range(Cl):
-        for z in range(Z):
-            w0[z]=np.random.random()
-
-        (wf,f,d) = fmin_l_bfgs_b( of.allr, w0,fprime=None, args=(lPx_all, c, np.array( [list( C).index(z) for z in y_train] ), lamb ), approx_grad=1 ,bounds=bounds,maxiter=300)
-        wfc[c,:] = wf    
-            
-    wfcn = wfc / wfc.sum(1)[:,None]
-    y_predict = [list( set(y) )[item] for item in list((lPx_te_all * wfcn[:,:,None]).sum(1).argmax(0) )]
-    accuracy_allm[counter] = float( sum( y_predict == y_test ))*100 / len( y_test )
-
-
 
     counter +=1
 
-pp.bar(range(5), np.array([accuracy_nb.mean(),accuracy_aode.mean(),accuracy_cll.mean(),accuracy_mse.mean(),accuracy_rbc.mean()]))
+
+counter = 0
+print "-- Support Vector Machines: linear kernel --"
+accuracy_svm = np.zeros(no_folds)
+C_range = 10. ** np.arange(-1, 2)
+tuned_parameters = [{'kernel': ['linear'],'C': C_range }]
+
+curr_fold = 0
+for train_index, test_index in skf:
+    X_train = data[curr_fold][train_index,:]
+    X_test = data[curr_fold][test_index,:]
+    y_train = y[train_index]
+    y_test = y[test_index]
+    scaler = preprocessing.StandardScaler().fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
+    clf = GridSearchCV(SVC(kernel = 'linear'), tuned_parameters, cv=5, scoring='accuracy')
+    clf.fit(X_train, y_train)
+    
+    y_predicted = clf.predict(X_test)
+    accuracy_svm[curr_fold] = metrics.accuracy_score(y_test,y_predicted)
+    curr_fold += 1
 
 
-
-
+print 'NB: ' + str( accuracy_nb.mean() ) + ' ' + str( accuracy_nb.std() )
+print 'AODE: ' + str( accuracy_aode.mean() ) + ' ' + str( accuracy_aode.std() )
+print 'RBC: ' + str( accuracy_rbc.mean() ) + ' ' + str( accuracy_rbc.std() )
+print 'dNB: ' + str( accuracy_mse.mean() ) + ' ' + str( accuracy_mse.std() )
+print 'SVM: ' + str( accuracy_svm.mean()*100 ) + ' ' + str( accuracy_svm.std()*100 )
 
 
 

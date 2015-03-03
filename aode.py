@@ -19,7 +19,7 @@ class ode:
         self.Zval = list()
         self.C = []
         self.M = min_occurrence
-        self.val = list()
+        self.validity = list()
 
     def fit_nb(self, X, y):
         self.C = map(int, list( set(y)) )

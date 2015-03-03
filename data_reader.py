@@ -12,7 +12,7 @@ def data_reader( name, label_id = 'last', type = 'C', has_index = True ):
     
     assert label_id == 'last' or label_id == 'first'
     assert isinstance( has_index, bool)
-    assert  has_index and label_id == 'last'
+    assert (has_index and label_id == 'last') or  not has_index 
 
     try:
         base_directory = os.path.abspath(".")
