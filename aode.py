@@ -48,7 +48,7 @@ class ode:
         self.C = map(int, list( set(y)) )
         self.py = np.array([ list(y).count(i) for i in set( y )], float ) / X.shape[0]
         self.names[self.father] = map(int,list( set( X[:,self.father] )))
-        self.validity = map( int, np.histogram( X[:,self.father], np.unique(X[:,self.father] ))[0] > self.M) 
+        self.validity =  map( int, [list( X[:,self.father]).count(i) > self.father for i in np.unique(X[:,self.father])] ) 
 
         for z in range(self.Z):
             self.names[z] = map(int,list( set( X[:,z] )))

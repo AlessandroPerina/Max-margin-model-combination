@@ -20,20 +20,29 @@ except:
 
 
 no_folds = 10
-'''
+
 name = 'nursery'
 label_id = 'last'
 type_attributes = 'C' 
 has_index = False
-'''
 
+'''
 name = 'glass'
 label_id = 'last'
 type_attributes = 'N' 
 has_index = False
+'''
+
+'''
+name = 'lung-cancer'
+label_id = 'first'
+type_attributes = 'C' 
+has_index = False
+'''
+
 raw_data, names, X, y =  DR.data_reader( name, label_id, type_attributes, has_index )
 
-
+# names --> Possible feature names for each attribute
 C = set(y)
 skf = cross_validation.StratifiedKFold(y, n_folds= no_folds)
 data = list()
@@ -76,7 +85,6 @@ try:
 except ImportError:
     import aode
 
-import pdb  #debugger - in the case I need it
 #Package name : aode
 #Classes: ode, aode - Naive bayes is a ode without father
 
@@ -106,7 +114,7 @@ for train_index, test_index in skf:
     accuracy_nb[counter] = float( sum( y_predict == y_test ))*100 / len( y_test )
 
     for z in range(Z):
-        od = aode.ode(0)
+        od = aode.ode()
         od.fit_ode( X_train, y_train, z )
         LL, y_predict = od.ode_likelihood( X_test )
         Px_te[:,z,0,:] = LL.T
@@ -134,7 +142,7 @@ accuracy_aode = np.zeros(no_folds)
 accuracy_cll = np.zeros(no_folds) 
 accuracy_mse = np.zeros(no_folds) 
 accuracy_rbc = np.zeros(no_folds)
-accuracy_allm = np.zeros(no_folds)
+
 import objfun as of
 from scipy.optimize import fmin_l_bfgs_b
 counter = 0
@@ -160,7 +168,7 @@ for train_index, test_index in skf:
     accuracy_nb[counter] = float( sum( y_predict == y_test ))*100 / len( y_test )
 
     for z in range(Z):
-        od = aode.ode(0)
+        od = aode.ode()
         od.fit_ode( X_train, y_train, z )
         LL, y_predict = od.ode_likelihood( X_test )
         Px_te[:,z,0,:] = LL.T
